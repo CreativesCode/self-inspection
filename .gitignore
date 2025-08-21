@@ -1,0 +1,51 @@
+# ===========================================
+# SELF INSPECTION SYSTEM - GIT IGNORE
+# ===========================================
+
+# Certificados SSL privados (NUNCA subir a Git)
+ssl/private/*.key
+ssl/private/*.pem
+ssl/private/*.p12
+
+# Variables de entorno
+.env
+*.env
+
+# Logs
+*.log
+logs/
+
+# Archivos temporales
+*.tmp
+*.temp
+temp/
+
+# Cache
+.cache/
+*.cache
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Docker
+.dockerignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node modules (si los hay en la raíz)
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
