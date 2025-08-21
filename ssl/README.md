@@ -1,64 +1,141 @@
-# 🔐 Configuración de Certificados SSL
+# 🔐 Configuración SSL con Application Load Balancer
 
-## 📁 Estructura de Directorios
+## 📋 **Configuración Actualizada**
+
+Este proyecto ahora usa un **Application Load Balancer (ALB)** de AWS para manejar SSL/TLS, lo que simplifica la configuración y mejora la seguridad.
+
+## 🏗️ **Arquitectura SSL**
 
 ```
-ssl/
-├── certs/
-│   └── www.safe.360ingeco.com.crt    # Certificado público
-└── private/
-    └── www.safe.360ingeco.com.key    # Clave privada
+Internet → ALB (HTTPS/443) → EC2 Instance (HTTP/80) → Nginx → Aplicaciones
 ```
 
-## 🚀 Pasos para Configurar
+### **Ventajas:**
 
-### 1. **Descargar Certificados desde ACM**
+- ✅ **SSL manejado por AWS** (más seguro)
+- ✅ **Renovación automática** de certificados
+- ✅ **Mejor rendimiento** (SSL termination en ALB)
+- ✅ **Configuración más simple**
+- ✅ **No necesitas manejar certificados localmente**
 
-Si usas AWS Certificate Manager:
+## 🚀 **Configuración del ALB**
+
+### **1. Crear Application Load Balancer:**
+
+- **Tipo**: Application Load Balancer
+- **Scheme**: Internet-facing
+- **VPC**: La misma de tu instancia EC2
+- **Subnets**: Al menos 2 zonas de disponibilidad
+
+### **2. Configurar Target Group:**
+
+- **Target Type**: Instances
+- **Protocol**: HTTP
+- **Port**: 80
+- **Health Check Path**: `/health/`
+- **Health Check Port**: 80
+
+### **3. Configurar Listener:**
+
+- **Port**: 443
+- **Protocol**: HTTPS
+- **Default Action**: Forward to Target Group
+- **Certificate**: Tu certificado ACM existente
+
+### **4. Configurar Listener HTTP (Opcional):**
+
+- **Port**: 80
+- **Protocol**: HTTP
+- **Default Action**: Redirect to 443
+
+## 🔧 **Configuración de Security Groups**
+
+### **ALB Security Group:**
+
+```
+Inbound Rules:
+- HTTP (80): 0.0.0.0/0
+- HTTPS (443): 0.0.0.0/0
+
+Outbound Rules:
+- All traffic: 0.0.0.0/0
+```
+
+### **EC2 Security Group:**
+
+```
+Inbound Rules:
+- HTTP (80): Solo desde ALB Security Group
+- SSH (22): Solo tu IP
+
+Outbound Rules:
+- All traffic: 0.0.0.0/0
+```
+
+## 📝 **Variables de Entorno**
+
+Ya no necesitas configurar certificados SSL en tu `.env`:
 
 ```bash
-# Descargar el certificado (.pem)
-aws acm export-certificate \
-  --certificate-arn arn:aws:acm:region:account:certificate/certificate-id \
-  --passphrase password \
-  --output text > www.safe.360ingeco.com.pem
+# Solo necesitas estas variables básicas
+DB_NAME=postgres
+DB_USER=postgres
+DB_PASSWORD=tu_supabase_db_password
+DB_HOST=tu-project-ref.supabase.co
+DB_PORT=5432
 
-# Extraer certificado y clave
-openssl pkcs12 -in www.safe.360ingeco.com.pem -out www.safe.360ingeco.com.p12 -nodes
-openssl pkcs12 -in www.safe.360ingeco.com.p12 -out www.safe.360ingeco.com.crt -clcerts -nokeys
-openssl pkcs12 -in www.safe.360ingeco.com.p12 -out www.safe.360ingeco.com.key -nocerts -nodes
+DEBUG=False
+SECRET_KEY=tu_secret_key
 ```
 
-### 2. **Copiar Archivos**
+## 🚀 **Despliegue**
+
+### **1. Crear ALB en AWS Console**
+
+### **2. Configurar Target Group con tu instancia EC2**
+
+### **3. Configurar Listener HTTPS con tu certificado ACM**
+
+### **4. Desplegar tu aplicación:**
 
 ```bash
-# Copiar certificado
-cp www.safe.360ingeco.com.crt ssl/certs/
-
-# Copiar clave privada
-cp www.safe.360ingeco.com.key ssl/private/
+docker-compose up -d --build
 ```
 
-### 3. **Permisos de Seguridad**
+## 🔍 **Verificación**
+
+### **Desde tu máquina local:**
 
 ```bash
-# Hacer la clave privada solo legible por root
-chmod 600 ssl/private/www.safe.360ingeco.com.key
+# Verificar que el ALB responde
+curl -I https://www.safe.360ingeco.com/
 
-# Certificado público legible por todos
-chmod 644 ssl/certs/www.safe.360ingeco.com.crt
+# Verificar health check
+curl -I http://tu-ip-ec2/health/
 ```
 
-## ⚠️ **Importante**
+### **Logs del ALB:**
 
-- **NO** subir la clave privada (.key) a Git
-- **SÍ** subir el certificado (.crt) a Git
-- Agregar `ssl/private/*.key` a `.gitignore`
+- **Access Logs**: Habilitar en configuración del ALB
+- **CloudWatch**: Monitorear métricas de rendimiento
 
-## 🔍 **Verificar Configuración**
+## ⚠️ **Notas Importantes**
 
-```bash
-# Verificar que Nginx puede leer los archivos
-docker-compose exec nginx ls -la /etc/ssl/certs/
-docker-compose exec nginx ls -la /etc/ssl/private/
-```
+- **No necesitas** archivos de certificados SSL locales
+- **No necesitas** configurar puerto 443 en Docker
+- **El ALB** maneja automáticamente la redirección HTTP → HTTPS
+- **Tu aplicación** solo necesita responder en puerto 80
+
+## 🆘 **Solución de Problemas**
+
+### **ALB no puede conectar a EC2:**
+
+- Verificar Security Groups
+- Verificar que EC2 esté en la VPC correcta
+- Verificar health check en `/health/`
+
+### **HTTPS no funciona:**
+
+- Verificar que el certificado ACM esté validado
+- Verificar configuración del Listener 443
+- Verificar que el Target Group esté configurado correctamente
