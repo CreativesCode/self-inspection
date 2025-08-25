@@ -177,11 +177,11 @@ docker-compose exec frontend ping backend
 
 ## Success Criteria
 
-✅ Backend accessible on `http://localhost:8000`
-✅ Frontend accessible on `http://localhost`
-✅ GraphQL requests work from browser
-✅ CORS headers are properly set
-✅ SPA routing works correctly
+✅ Backend accessible on `http://51.48.247.218:8000`  
+✅ Frontend accessible on `http://51.48.247.218`  
+✅ GraphQL requests work from browser  
+✅ CORS headers are properly set  
+✅ SPA routing works correctly  
 ✅ No console errors in browser
 
 ## Next Steps
