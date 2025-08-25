@@ -19,16 +19,14 @@ services:
 
   # Frontend (Next.js) - ACCESO PÚBLICO
   frontend:
-    build:
-      context: ./frontend
-    volumes:
-      - ./frontend:/app
-    expose:
-      - "3000" # Puerto expuesto solo internamente
-    environment:
-      - API_URL=http://backend:8000 # URL del backend (interno, no público)
-    depends_on:
-      - backend
+  build:
+    context: ./frontend
+  expose:
+    - "3000"
+  environment:
+    - API_URL=http://backend:8000
+  depends_on:
+    - backend
 
   # Nginx (Proxy Reverso) - PUNTO DE ENTRADA PÚBLICO
   nginx:
