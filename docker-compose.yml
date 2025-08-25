@@ -8,13 +8,13 @@ services:
     volumes:
       - ./backend:/app
     expose:
-      - "8000" # Solo interno
+      - "8000"
     environment:
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${DB_NAME}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
 
   # Frontend (Next.js SPA)
   frontend:
@@ -23,9 +23,9 @@ services:
     volumes:
       - ./frontend:/app
     expose:
-      - "3000" # Solo interno
+      - "3000"
     environment:
-      - API_URL=http://backend:8000
+      API_URL: http://backend:8000
     depends_on:
       - backend
 
@@ -42,14 +42,12 @@ services:
     depends_on:
       - backend
       - frontend
-    environment:
-      - FRONTEND_URL=http://frontend:3000
 
   # Redis (cache y broker de Celery)
   redis:
     image: redis:7-alpine
     expose:
-      - "6379" # Solo interno
+      - "6379"
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes
@@ -62,18 +60,18 @@ services:
     volumes:
       - ./backend:/app
     environment:
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${DB_NAME}
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     depends_on:
       - backend
       - redis
 
-  # Celery Beat (Scheduler)
+  # Celery Beat
   celery-beat:
     build:
       context: ./backend
@@ -81,13 +79,13 @@ services:
     volumes:
       - ./backend:/app
     environment:
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${DB_NAME}
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     depends_on:
       - backend
       - redis
