@@ -26,7 +26,7 @@ services:
       - backend
     environment:
       # API URL for external access (browser)
-      NEXT_PUBLIC_API_URL: "http://localhost:8000"
+      NEXT_PUBLIC_API_URL: "http://51.48.247.218:8000"
       # Internal API URL for Docker network
       NEXT_PUBLIC_INTERNAL_API_URL: "http://backend:8000"
 
