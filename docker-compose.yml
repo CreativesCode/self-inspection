@@ -16,7 +16,7 @@ services:
       # Allow external access for development
       DJANGO_ALLOWED_HOSTS: "*"
 
-  # Frontend SPA con Nginx
+  # Frontend SPA served with Node.js
   frontend:
     build:
       context: ./frontend
@@ -25,10 +25,12 @@ services:
     depends_on:
       - backend
     environment:
-      # API URL for external access (browser)
+      # API URL for external access (AWS Load Balancer will handle this)
       NEXT_PUBLIC_API_URL: "http://51.48.247.218:8000"
       # Internal API URL for Docker network
       NEXT_PUBLIC_INTERNAL_API_URL: "http://backend:8000"
+      # Node environment
+      NODE_ENV: "production"
 
   # Redis (solo interno)
   redis:
