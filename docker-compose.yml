@@ -15,6 +15,11 @@ services:
       DB_NAME: ${DB_NAME}
       # Allow external access for development
       DJANGO_ALLOWED_HOSTS: "*"
+      # Enable production Celery configuration
+      ENVIRONMENT: "production"
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 0
 
   # Frontend SPA served with Node.js
   frontend:
@@ -58,8 +63,11 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
+      # Enable production Celery configuration
+      ENVIRONMENT: "production"
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      REDIS_DB: 0
     depends_on:
       - backend
       - redis
@@ -77,8 +85,11 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
+      # Enable production Celery configuration
+      ENVIRONMENT: "production"
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      REDIS_DB: 0
     depends_on:
       - backend
       - redis
