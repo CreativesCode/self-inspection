@@ -20,13 +20,13 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_DB: 0
-      # Enable S3 storage
-      USE_S3: "True"
-      AWS_ACCESS_KEY_ID: "AKIAW3N4EDP2NOWTSBMC"
-      AWS_SECRET_ACCESS_KEY: "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"
-      AWS_STORAGE_BUCKET_NAME: "backend-self-inspection-images"
-      AWS_S3_REGION_NAME: "eu-south-2"
-      AWS_LOCATION: "static"
+      # S3 storage configuration (from .env file)
+      USE_S3: ${USE_S3}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_STORAGE_BUCKET_NAME: ${AWS_STORAGE_BUCKET_NAME}
+      AWS_S3_REGION_NAME: ${AWS_S3_REGION_NAME}
+      AWS_LOCATION: ${AWS_LOCATION}
 
   # Frontend SPA served with Node.js
   frontend:
@@ -75,13 +75,13 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_DB: 0
-      # Enable S3 storage
-      USE_S3: "True"
-      AWS_ACCESS_KEY_ID: "AKIAW3N4EDP2NOWTSBMChere"
-      AWS_SECRET_ACCESS_KEY: "ZQlmymxJJfTadh7kxsQjDYxzJcBkpCdBkNYdOTFU"
-      AWS_STORAGE_BUCKET_NAME: "backend-self-inspection-images"
-      AWS_S3_REGION_NAME: "eu-south-2"
-      AWS_LOCATION: "static"
+      # S3 storage configuration (from .env file)
+      USE_S3: ${USE_S3}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_STORAGE_BUCKET_NAME: ${AWS_STORAGE_BUCKET_NAME}
+      AWS_S3_REGION_NAME: ${AWS_S3_REGION_NAME}
+      AWS_LOCATION: ${AWS_LOCATION}
     depends_on:
       - backend
       - redis
@@ -104,13 +104,13 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_DB: 0
-      # Enable S3 storage
-      USE_S3: "True"
-      AWS_ACCESS_KEY_ID: "AKIAW3N4EDP2NOWTSBMChere"
-      AWS_SECRET_ACCESS_KEY: "ZQlmymxJJfTadh7kxsQjDYxzJcBkpCdBkNYdOTFU"
-      AWS_STORAGE_BUCKET_NAME: "backend-self-inspection-images"
-      AWS_S3_REGION_NAME: "eu-south-2"
-      AWS_LOCATION: "static"
+      # S3 storage configuration (from .env file)
+      USE_S3: ${USE_S3}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_STORAGE_BUCKET_NAME: ${AWS_STORAGE_BUCKET_NAME}
+      AWS_S3_REGION_NAME: ${AWS_S3_REGION_NAME}
+      AWS_LOCATION: ${AWS_LOCATION}
     depends_on:
       - backend
       - redis
