@@ -50,3 +50,4 @@ env/
 venv/
 .venv/
 docs/design/*
+SUPABASE_MIGRATION_STUDY.md
