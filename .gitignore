@@ -7,9 +7,18 @@ ssl/private/*.key
 ssl/private/*.pem
 ssl/private/*.p12
 
-# Variables de entorno
+# Variables de entorno (contienen secretos — nunca subir a git)
 .env
+.env.local
+.env.*.local
+.env.supabase.local
+.env.supabase
 *.env
+
+# Permitir explícitamente plantillas/ejemplos
+!env.example
+!.env.example
+!.env.supabase.example
 
 # Logs
 *.log

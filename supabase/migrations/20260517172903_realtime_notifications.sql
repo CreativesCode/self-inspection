@@ -1,0 +1,12 @@
+-- =====================================================================
+-- Habilita Supabase Realtime para `public.notifications`.
+--
+-- Sin esto, la publicación `supabase_realtime` no incluye nuestras tablas y
+-- el cliente nunca recibe eventos de `postgres_changes`. Solo necesitamos
+-- notifications: las inspecciones/polls cambian via mutations explícitas del
+-- propio usuario, no hace falta empujar updates a otros tabs.
+--
+-- RLS sigue filtrando: el realtime solo entrega filas que el SELECT policy
+-- (`recipient_id = auth.uid()`) permita al canal.
+-- =====================================================================
+alter publication supabase_realtime add table public.notifications;
