@@ -739,7 +739,14 @@ export default function EvaluationsDashboard() {
 
         {/* ─── Ranking ─── */}
         {hasEvaluations && (
-          <Card radius={22}>
+          // padding=0 + !p-3 sm:!p-6: el padding=24 fijo del Card consumía 48px
+          // de ancho en móvil y junto al padding del button interno hacía que
+          // el row no cupiera y la Pill/percentage salieran del card.
+          <Card
+            radius={22}
+            padding={0}
+            className="overflow-hidden !p-3 sm:!p-6"
+          >
             <SectionHead
               title="Ranking de inspectores"
               subtitle="Ordenado por porcentaje global"
@@ -771,9 +778,13 @@ export default function EvaluationsDashboard() {
                     key={`m-${u.user.id}`}
                     type="button"
                     onClick={() => handleUserSelect(u.user.id)}
-                    className="flex w-full flex-col gap-2.5 rounded-[14px] border border-hairline bg-bg-2 p-3 text-left transition-colors hover:bg-bg-2/70 dark:border-hairline-dark dark:bg-white/[0.03]"
+                    // min-w-0 + overflow-hidden en el button: <button> tiene
+                    // min-width:min-content por defecto en algunos UA, lo que
+                    // impedía que flex-1 shrink-ee y causaba overflow horizontal
+                    // (Pill "EXCELENTE" y % se cortaban contra el borde derecho).
+                    className="flex w-full min-w-0 flex-col gap-2.5 overflow-hidden rounded-[14px] border border-hairline bg-bg-2 p-3 text-left transition-colors hover:bg-bg-2/70 dark:border-hairline-dark dark:bg-white/[0.03]"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
                       <span
                         className={cn(
                           "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-[13px] font-extrabold",
@@ -798,18 +809,22 @@ export default function EvaluationsDashboard() {
                           score {avgScore}
                         </div>
                       </div>
-                      <Pill tone={tone}>{u.overallRating || "—"}</Pill>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 flex-1 overflow-hidden rounded-full bg-[rgba(27,22,20,0.06)] dark:bg-white/[0.06]">
+                    {/* Row 2: bar + % + Pill. El Pill antes vivía en row 1
+                        junto al nombre y se cortaba en pantallas estrechas. */}
+                    <div className="flex min-w-0 items-center gap-2">
+                      <div className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-[rgba(27,22,20,0.06)] dark:bg-white/[0.06]">
                         <div
                           className={cn("h-full rounded-full", barClass)}
                           style={{ width: `${pct}%` }}
                         />
                       </div>
-                      <span className="w-12 text-right font-mono text-[12px] font-bold">
+                      <span className="w-12 shrink-0 text-right font-mono text-[12px] font-bold">
                         {pct.toFixed(1)}%
                       </span>
+                      <Pill tone={tone} className="shrink-0">
+                        {u.overallRating || "—"}
+                      </Pill>
                     </div>
                   </button>
                 );

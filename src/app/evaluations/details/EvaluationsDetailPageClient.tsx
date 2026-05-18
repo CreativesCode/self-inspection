@@ -496,7 +496,10 @@ export default function EvaluationsDetailPageClient() {
         </div>
 
         {/* Lista de evaluaciones */}
-        <Card radius={22}>
+        {/* padding 0 + !p-3 sm:!p-6: el padding fijo 24 del Card sumado al
+            padding de los button cards internos hacía que en móvil la Pill y
+            el % se salieran del card. */}
+        <Card radius={22} padding={0} className="overflow-hidden !p-3 sm:!p-6">
           <SectionHead
             title="Evaluaciones realizadas"
             subtitle={`${evaluations.length} ${evaluations.length === 1 ? "evaluación" : "evaluaciones"} · ordenadas por fecha`}
@@ -536,9 +539,12 @@ export default function EvaluationsDetailPageClient() {
                           `/inspections/details?id=${encodeURIComponent(e.inspection.projectCode)}`,
                         )
                       }
-                      className="flex w-full flex-col gap-2 rounded-[14px] border border-hairline bg-bg-2 p-3 text-left dark:border-hairline-dark dark:bg-white/[0.03]"
+                      // min-w-0 + overflow-hidden previenen overflow horizontal
+                      // del Pill / % cuando "EXCELENTE" o un nombre largo
+                      // empujan el row más allá del ancho disponible.
+                      className="flex w-full min-w-0 flex-col gap-2 overflow-hidden rounded-[14px] border border-hairline bg-bg-2 p-3 text-left dark:border-hairline-dark dark:bg-white/[0.03]"
                     >
-                      <div className="flex items-start justify-between gap-2">
+                      <div className="flex min-w-0 items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
                           <div className="font-mono text-[11px] font-semibold text-ink-2 dark:text-dark-ink-2">
                             {e.inspection.projectCode}
@@ -550,10 +556,12 @@ export default function EvaluationsDetailPageClient() {
                             {e.inspection.client?.clientName || "—"}
                           </div>
                         </div>
-                        <Pill tone={tone}>{e.rating || "—"}</Pill>
+                        <Pill tone={tone} className="shrink-0">
+                          {e.rating || "—"}
+                        </Pill>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-baseline gap-1">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <div className="flex shrink-0 items-baseline gap-1">
                           <span className="text-[14px] font-extrabold">
                             {totalScore}
                           </span>
@@ -561,13 +569,13 @@ export default function EvaluationsDetailPageClient() {
                             / {maxScore}
                           </span>
                         </div>
-                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[rgba(27,22,20,0.06)] dark:bg-white/[0.06]">
+                        <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-[rgba(27,22,20,0.06)] dark:bg-white/[0.06]">
                           <div
                             className={cn("h-full rounded-full", barClass)}
                             style={{ width: `${pct}%` }}
                           />
                         </div>
-                        <span className="w-12 text-right font-mono text-[11px] font-bold">
+                        <span className="w-12 shrink-0 text-right font-mono text-[11px] font-bold">
                           {pct.toFixed(1)}%
                         </span>
                       </div>
