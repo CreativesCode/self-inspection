@@ -1,62 +1,78 @@
-# ===========================================
-# SELF INSPECTION SYSTEM - GIT IGNORE
-# ===========================================
+# =============================================================================
+# Self Inspection — Next.js app + Supabase backend
+# =============================================================================
 
-# Certificados SSL privados (NUNCA subir a Git)
-ssl/private/*.key
-ssl/private/*.pem
-ssl/private/*.p12
+# Dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
-# Variables de entorno (contienen secretos — nunca subir a git)
-.env
-.env.local
-.env.*.local
-.env.supabase.local
-.env.supabase
-*.env
+# Next.js
+/.next/
+/out/
+next-env.d.ts
 
-# Permitir explícitamente plantillas/ejemplos
-!env.example
-!.env.example
-!.env.supabase.example
+# Build / coverage
+/build
+/coverage
+/dist
+
+# TypeScript
+*.tsbuildinfo
 
 # Logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
 logs/
 
-# Archivos temporales
-*.tmp
-*.temp
-temp/
+# Env files (contienen secretos)
+.env
+.env.*
+.env.local
+.env.supabase
+.env.supabase.local
+!.env.example
+!.env.supabase.example
+!env.example
 
-# Cache
-.cache/
-*.cache
-
-# Archivos del sistema
+# Editor / OS
 .DS_Store
 Thumbs.db
-
-# Docker
-.dockerignore
-
-# IDE
-.vscode/
-.idea/
 *.swp
 *.swo
+.vscode/
+.idea/
+*.pem
 
-# Node modules (si los hay en la raíz)
-node_modules/
+# Vercel
+.vercel
 
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-env/
-venv/
-.venv/
-docs/design/*
+# Capacitor: builds nativas grandes, se regeneran con `cap sync`
+android/build/
+android/.gradle/
+android/app/build/
+ios/build/
+ios/App/build/
+ios/App/Pods/
+
+# Supabase CLI
+supabase/.branches
+supabase/.temp
+
+# Documentos privados
 SUPABASE_MIGRATION_STUDY.md
+
+# Legacy Django backend (pendiente borrar manualmente cuando libere el log lock)
+/backend/
+
+# Archivos *.legacy generados durante el cleanup post-cutover
+*.legacy
+*.legacy.*

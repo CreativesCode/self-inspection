@@ -1,0 +1,422 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Animación personalizada para el spinner - Versión mejorada */
+@-webkit-keyframes spin {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spin {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  -webkit-animation: spin 1s linear infinite;
+  animation: spin 1s linear infinite;
+}
+
+/* Forzar la animación incluso si el usuario tiene preferencias de movimiento reducido */
+.force-animate-spin {
+  -webkit-animation: spin 1s linear infinite !important;
+  animation: spin 1s linear infinite !important;
+}
+
+/* Mobile Safe Area - Solo para Capacitor/PWA */
+@supports (padding: max(0px)) {
+  .mobile-safe-header {
+    padding-top: max(env(safe-area-inset-top), 1rem);
+  }
+
+  .mobile-safe-content {
+    padding-left: max(env(safe-area-inset-left), 0px);
+    padding-right: max(env(safe-area-inset-right), 0px);
+  }
+
+  .mobile-safe-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+  }
+
+  /* Top padding mínimo respetando notch (Capacitor iOS) */
+  .mobile-safe-top {
+    padding-top: max(env(safe-area-inset-top), 0.5rem);
+  }
+
+  /* Solo el inset bottom (sin mínimo). Útil para sticky bottom bars
+     que ya tienen su propio padding visual. */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+/* Padding en mobile para que el contenido no quede tapado por la
+   MobileTabBar (solo cuando la TabBar está visible, < sm). */
+@media screen and (max-width: 639px) {
+  .has-mobile-tabbar {
+    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Teclado Virtual - Manejo del viewport cuando aparece el teclado */
+@supports (height: 100vh) {
+  .keyboard-adjust {
+    min-height: 100vh;
+    min-height: calc(100vh - env(keyboard-inset-height, 0px));
+  }
+}
+
+/* Formularios móviles - Padding adicional para evitar que el teclado tape campos */
+@media screen and (max-width: 768px) {
+  .form-container {
+    padding-bottom: 50vh; /* Espacio extra para que el último campo sea visible */
+  }
+
+  .form-field-mobile {
+    margin-bottom: 1rem;
+  }
+
+  /* Asegurar que el contenido sea scrolleable cuando aparece el teclado */
+  .mobile-scroll-container {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Estilos cuando el teclado está abierto */
+body.keyboard-open {
+  /* Ajustar altura cuando el teclado está visible */
+  --viewport-height: calc(100vh - var(--keyboard-height, 0px));
+  /* Prevenir scroll del body cuando el teclado está abierto */
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+
+body.keyboard-open .form-container {
+  min-height: var(--viewport-height, 100vh);
+  padding-bottom: 2rem; /* Menos padding cuando el teclado maneja el espacio */
+  /* Permitir scroll en el contenedor del formulario */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mejor scroll para iOS cuando el teclado está abierto */
+body.keyboard-open .mobile-scroll-container {
+  position: relative;
+  height: var(--viewport-height, 100vh);
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Asegurar que los inputs estén visibles cuando el teclado está abierto */
+body.keyboard-open input:focus,
+body.keyboard-open textarea:focus {
+  /* Asegurar que el input enfocado esté visible */
+  scroll-margin-top: 80px; /* Altura del header + margen */
+}
+
+/* Mejorar la experiencia en formularios móviles */
+.form-field-mobile {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.form-field-mobile input,
+.form-field-mobile textarea,
+.form-field-mobile select {
+  /* Asegurar que los inputs tengan suficiente espacio */
+  min-height: 44px; /* Tamaño mínimo recomendado para touch */
+  font-size: 16px; /* Prevenir zoom en iOS */
+}
+
+
+/* Estilos específicos para Capacitor */
+.capacitor-app {
+  /* Asegurar que el scroll funcione correctamente en Capacitor */
+  -webkit-overflow-scrolling: touch;
+  overflow-scrolling: touch;
+}
+
+/* Mejorar el scroll en WebView de Capacitor */
+html,
+body {
+  /* Evita scroll horizontal accidental en mobile (Capacitor / WebView). */
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-width: 100vw;
+}
+
+/* Asegurar que el main tenga scroll cuando sea necesario */
+main {
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Estilos para mejorar el scroll en formularios de Capacitor */
+.form-container {
+  /* Asegurar que el contenedor del formulario tenga scroll */
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mejorar el scroll en páginas de inspecciones */
+.inspections-page {
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Fallback para dispositivos que no soportan safe-area */
+@media screen and (max-width: 768px) {
+  .mobile-header-fallback {
+    padding-top: 2rem; /* 32px para compensar status bar típica */
+  }
+}
+
+/* Leaflet styles */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+}
+
+.leaflet-popup-content {
+  margin: 8px;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 4px;
+}
+
+.leaflet-popup-tip {
+  background: white;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+
+  /* Accent palette (default = "brick"). AccentContext sobreescribe estas vars
+     al montar. Definidas aqui para evitar flash en SSR. */
+  --accent-50: #FEF2F1;
+  --accent-100: #FBDAD6;
+  --accent-200: #F5B5AD;
+  --accent-300: #ED7767;
+  --accent-400: #E14939;
+  --accent-500: #DA291C;
+  --accent-600: #BD2217;
+  --accent-700: #A21C12;
+  --accent-800: #87150D;
+  --accent-900: #6C0F08;
+  --accent-rgb: 218, 41, 28;
+  --grad-brand: linear-gradient(135deg, #DA291C 0%, #E76150 55%, #F28C7C 100%);
+  --grad-brand-soft: linear-gradient(135deg, #FEF2F1 0%, #FBDAD6 100%);
+  --grad-bad: linear-gradient(135deg, #DA291C, #F28C7C);
+  --grad-border-glow: linear-gradient(135deg, rgba(218,41,28,0.55), rgba(218,41,28,0.18) 45%, rgba(120,107,102,0.18) 100%);
+  --grad-border-glow-dark: linear-gradient(135deg, rgba(218,41,28,0.55), rgba(218,41,28,0.25) 45%, rgba(255,255,255,0.05) 100%);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.leaflet-pane {
+  z-index: 15 !important;
+}
+
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 15 !important;
+}
+
+.button {
+  @apply px-2 py-1 md:px-4 md:py-2 border rounded-md text-sm font-medium;
+}
+
+.button-primary {
+  @apply button border-transparent shadow-sm text-white focus:outline-none;
+}
+
+.button-primary-light {
+  @apply button-primary bg-primary-600 hover:bg-primary-700;
+}
+
+.button-primary-dark {
+  @apply button-primary bg-primary-500 hover:bg-primary-600;
+}
+
+.button-secondary {
+  @apply button border-transparent shadow-sm focus:outline-none;
+}
+
+.button-secondary-light {
+  @apply button bg-white text-gray-700 hover:bg-gray-50 border-gray-300;
+}
+
+.button-secondary-dark {
+  @apply button bg-gray-700 text-gray-300 hover:bg-gray-600 border-gray-600;
+}
+
+.button-info {
+  @apply button border-transparent shadow-sm focus:outline-none;
+}
+
+.button-info-light {
+  @apply button bg-blue-600 text-white hover:bg-blue-700 border-blue-600;
+}
+
+.button-info-dark {
+  @apply button bg-blue-600 text-white hover:bg-blue-700 border-blue-600;
+}
+
+.button-danger {
+  @apply button border-transparent shadow-sm focus:outline-none;
+}
+
+.button-danger-light {
+  @apply button bg-red-600 text-white hover:bg-red-700 border-red-600;
+}
+.button-danger-dark {
+  @apply button bg-red-600 text-white hover:bg-red-700 border-red-600;
+}
+
+.input-primary {
+  @apply mt-1 block w-full rounded-md shadow-sm text-base px-3 py-2 border;
+}
+
+.input-primary-light {
+  @apply border-gray-300 text-black;
+}
+
+.input-primary-dark {
+  @apply bg-gray-700 border-gray-600 text-white;
+}
+
+.header-primary {
+  @apply text-xl md:text-3xl font-bold;
+}
+
+.header-primary-light {
+  @apply text-primary-500;
+}
+
+.header-primary-dark {
+  @apply text-primary-100;
+}
+
+.header-secondary {
+  @apply text-lg font-medium;
+}
+
+.header-secondary-light {
+  @apply text-gray-900;
+}
+
+.header-secondary-dark {
+  @apply text-white;
+}
+
+.header-description {
+  @apply mt-2 text-sm;
+}
+
+.header-description-light {
+  @apply text-gray-600;
+}
+
+.header-description-dark {
+  @apply text-gray-400;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Safe 360 · Rediseño · Utilidades de marca
+   Estas clases complementan los tokens declarados en
+   tailwind.config.js. Mantén las clases legacy de arriba para
+   no romper páginas que aún no se han migrado.
+   ───────────────────────────────────────────────────────────── */
+
+@layer utilities {
+  /* Texto con gradiente brand (usar en headlines clave) */
+  .text-grad-brand {
+    background-image: var(--grad-brand);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  /* Hairline borders (light + dark) */
+  .border-hairline {
+    border-color: rgba(27, 22, 20, 0.08);
+  }
+  .dark .border-hairline {
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  /* Esconder scrollbars dentro de cards (matches docs/design) */
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* ── Safe-area / Capacitor helpers ──
+     Usan env(safe-area-inset-*) para compensar notch / dynamic island /
+     home indicator iOS y los gestos de Android (viewportFit:cover ya está
+     en layout.tsx). */
+  .safe-pt {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .safe-pb {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .safe-px {
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+  /* Bottom-bars con padding interno + safe-area al final. */
+  .safe-bottom-bar {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
+  }
+  /* Touch target mínimo iOS HIG (44pt). Aplicar a botones críticos en
+     móvil cuando el contenido del botón es muy pequeño. */
+  .tap-44 {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}

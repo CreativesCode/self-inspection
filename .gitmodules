@@ -1,6 +1,0 @@
-[submodule "frontend"]
-	path = frontend
-	url = https://github.com/CreativesCode/frontend_self_inspection.git
-[submodule "backend"]
-	path = backend
-	url = https://github.com/CreativesCode/backend_self_inspection.git

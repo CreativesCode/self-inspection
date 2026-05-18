@@ -1,0 +1,233 @@
+# Frontend Deployment Guide
+
+This document describes how to build and deploy the Next.js frontend as a Single Page Application (SPA) using Docker with Node.js serve, ready for AWS Load Balancer integration and Capacitor mobile app generation.
+
+## Overview
+
+The project has been updated to use Next.js 14's new SPA export mode (`output: 'export'`) instead of the deprecated `next export` command. This provides better performance and compatibility with modern Next.js features.
+
+## Environment Configuration
+
+### 1. Setup Environment Variables
+
+Before building, configure your environment variables:
+
+```bash
+# Run the setup script
+npm run setup:env
+
+# This will create a .env file with the following variables:
+NEXT_PUBLIC_API_URL=http://51.48.247.218:8000
+NEXT_PUBLIC_GRAPHQL_URL=http://51.48.247.218:8000/graphql/
+NEXT_PUBLIC_ADMIN_URL=http://51.48.247.218:8000/admin/
+```
+
+### 2. Environment Variables Explained
+
+- **`NEXT_PUBLIC_API_URL`**: Base URL for the backend API (accessible from browser)
+- **`NEXT_PUBLIC_GRAPHQL_URL`**: Full GraphQL endpoint URL
+- **`NEXT_PUBLIC_ADMIN_URL`**: Django admin URL
+
+### 3. Production Configuration
+
+The project is configured for production with the following API endpoints:
+
+```bash
+# Production configuration (already set)
+NEXT_PUBLIC_API_URL=http://51.48.247.218:8000
+NEXT_PUBLIC_GRAPHQL_URL=http://51.48.247.218:8000/graphql/
+NEXT_PUBLIC_ADMIN_URL=http://51.48.247.218:8000/admin/
+```
+
+**Note**: These URLs are configured for the production environment. If you need to change them, update both the `docker-compose.yml` and `frontend/env.example` files.
+
+## Build Process
+
+### Local Development
+
+```bash
+npm run dev
+```
+
+### Production Build
+
+```bash
+npm run build
+```
+
+The build process will:
+
+1. Compile the Next.js application
+2. Generate static files in the `out/` directory
+3. Create a fully static SPA ready for deployment
+
+## Docker Deployment
+
+### Building the Docker Image
+
+```bash
+docker build -t next-spa .
+```
+
+### Running the Container
+
+```bash
+docker run -p 80:80 next-spa
+```
+
+### Multi-Stage Build Process
+
+The Dockerfile uses a single-stage approach optimized for SPA deployment:
+
+1. **Build & Serve**: Uses Node.js to build the SPA and serve it directly with the `serve` package
+2. **SPA Mode**: Automatically handles client-side routing for React Router
+3. **Capacitor Ready**: Static files are perfectly structured for mobile app generation
+
+## Serving Configuration
+
+The frontend is now served using Node.js `serve` package which:
+
+- Serves the SPA directly from the `/app/out` directory
+- Handles SPA routing with automatic fallback to `index.html` (via `-s` flag)
+- Runs on port 80 for direct access
+- Compatible with AWS Load Balancer routing
+- Perfect for Capacitor mobile app generation
+
+## API Access Configuration
+
+### Internal Docker Network
+
+- Frontend container can access backend via `http://backend:8000`
+- Used during build time and internal communication
+
+### External Browser Access
+
+- Browser accesses backend via the configured `NEXT_PUBLIC_API_URL`
+- Backend must be accessible from the host machine
+- CORS is configured to allow cross-origin requests
+
+## SPA Routing
+
+All routes automatically fallback to `index.html`, ensuring proper SPA behavior:
+
+- Client-side routing works correctly
+- Direct URL access to any route works
+- Browser refresh on any route works
+
+## AWS Load Balancer Integration
+
+The application is optimized for AWS Load Balancer deployment:
+
+### Architecture
+- **Frontend**: Served on port 80 via Node.js `serve`
+- **Backend**: Exposed on port 8000 via Django
+- **Load Balancer**: Routes traffic to appropriate services
+- **SSL/TLS**: Terminated at Load Balancer level with ACM certificates
+
+### Load Balancer Configuration
+1. **Target Groups**: 
+   - Frontend: Port 80 (health check: `/`)
+   - Backend: Port 8000 (health check: `/admin/`)
+2. **Listener Rules**: Route based on path patterns
+3. **SSL**: AWS Certificate Manager integration
+
+### Environment Variables for Production
+Update your `.env` file when deploying behind ALB:
+```bash
+NEXT_PUBLIC_API_URL=https://your-alb-domain.com
+NEXT_PUBLIC_GRAPHQL_URL=https://your-alb-domain.com/graphql/
+NEXT_PUBLIC_ADMIN_URL=https://your-alb-domain.com/admin/
+```
+
+## Capacitor Mobile App Integration
+
+The SPA is perfectly configured for Capacitor mobile app generation:
+
+### Key Features for Mobile
+- **Static Export**: `output: 'export'` generates pure static files
+- **Relative Paths**: No absolute URLs that would break in mobile context
+- **SPA Routing**: Client-side routing works seamlessly in mobile WebView
+- **Asset Optimization**: Images and assets are properly bundled
+
+### Building Mobile App
+```bash
+# Build the web app
+npm run build
+
+# Sync with Capacitor (copies /out to mobile platforms)
+npm run build:mobile
+
+# Open mobile platforms
+npm run open:android
+npm run open:ios
+```
+
+### Mobile App Structure
+```
+out/                    # Generated by Next.js build
+├── index.html         # Main SPA entry point
+├── _next/             # Next.js static assets
+├── favicon.ico        # App icon
+└── ...               # Other static assets
+```
+
+The `/out` directory is automatically copied to:
+- `android/app/src/main/assets/public/`
+- `ios/App/App/public/`
+
+## Troubleshooting
+
+### Build Issues
+
+- Ensure Node.js 18+ is installed
+- Clear `.next` and `out` directories if needed
+- Run `npm ci` to ensure clean dependency installation
+- Verify `.env` file exists and has correct API URLs
+
+### Docker Issues
+
+- Verify the nginx configuration file exists
+- Check that the build stage completes successfully
+- Ensure port 80 is available on the host
+- Verify backend service is accessible on port 8000
+
+### API Connection Issues
+
+- Check that backend is running and accessible on port 8000
+- Verify CORS configuration in Django settings
+- Ensure environment variables are correctly set
+- Test backend API directly: `curl http://localhost:8000/graphql/`
+
+### SPA Routing Issues
+
+- Verify `output: 'export'` is set in `next.config.js`
+- Check that `trailingSlash: true` is enabled
+- Ensure nginx configuration has proper fallback rules
+
+## Testing the Setup
+
+### 1. Test Backend Access
+
+```bash
+# From host machine
+curl http://localhost:8000/graphql/
+```
+
+### 2. Test Frontend Build
+
+```bash
+npm run test:build
+```
+
+### 3. Test Docker Deployment
+
+```bash
+docker build -t next-spa .
+docker run -p 80:80 next-spa
+```
+
+### 4. Test API from Browser
+
+- Open http://localhost in browser
+- Check browser console for API connection
+- Verify GraphQL requests work

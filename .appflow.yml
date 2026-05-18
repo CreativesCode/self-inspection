@@ -1,0 +1,28 @@
+# Configuración para Ionic Appflow
+# Este archivo define cómo se ejecuta el build en Appflow
+
+# Configuración del entorno
+environment:
+  - NODE_VERSION: "18"
+  - NPM_VERSION: "latest"
+
+# Scripts de pre-build
+prebuild:
+  - npm ci
+  - npm run version:status
+
+# Script de build principal
+build:
+  - npm run build:appflow
+
+# Scripts de post-build
+postbuild:
+  - echo "Build completado exitosamente"
+  - npm run version:status
+
+# Configuración de Capacitor
+capacitor:
+  android:
+    buildCommand: "npm run build:appflow"
+  ios:
+    buildCommand: "npm run build:appflow"
