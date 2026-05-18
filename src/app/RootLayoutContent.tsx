@@ -8,6 +8,7 @@ import { FriendlyErrorToast } from "@/components/common/FriendlyErrorToast";
 import { AppChrome } from "@/components/layout/AppChrome";
 import { useAccent } from "@/contexts/AccentContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAuthStore } from "@/store";
 import dynamic from "next/dynamic";
 import NextTopLoader from "nextjs-toploader";
 
@@ -33,6 +34,10 @@ export function RootLayoutContent({
 }: RootLayoutContentProps) {
   const { isDark, mounted } = useTheme();
   const { palette } = useAccent();
+  // Solo reservamos espacio para la MobileTabBar cuando ésta va a renderizar
+  // (sólo lo hace si hay usuario logueado). Sin esta condición, en el landing
+  // sin sesión queda un hueco de 80px debajo del footer.
+  const hasUser = useAuthStore((s) => !!s.user);
 
   // Usar tokens del design system (bg-bg / dark-bg) en el body para que el
   // color de fondo coincida con el de las páginas interiores y no se vean
@@ -83,8 +88,11 @@ export function RootLayoutContent({
             >
               <AppChrome />
               <FriendlyErrorToast />
-              {/* pb-20 sm:pb-0 = espacio para que la MobileTabBar no tape contenido */}
-              <main className="pb-20 sm:pb-0">{children}</main>
+              {/* pb-20 sm:pb-0 = espacio para que la MobileTabBar no tape
+                  contenido. Solo se aplica si hay usuario (la tabbar solo se
+                  monta logueado) para no dejar un hueco bajo el footer del
+                  landing en móvil. */}
+              <main className={hasUser ? "pb-20 sm:pb-0" : ""}>{children}</main>
             </ScrollToTopWrapper>
           </KeyboardFocusWrapper>
         </BackButtonHandler>

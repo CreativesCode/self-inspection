@@ -13,12 +13,47 @@ import { supabase } from "@/lib/supabase";
 export interface EvaluationsSummaryUser {
     user: {
         id: string;
+        email: string;
         firstName: string;
         lastName: string;
         userType: string;
     };
+    // Media de los porcentajes de las evaluaciones del usuario (escala 0–100).
     averageScore: number;
+    // Máximo de la escala de averageScore (siempre 100 — los porcentajes son
+    // 0–100). Lo expone el dashboard como "promedio X / Y" en el tooltip.
+    averageMaxScore: number;
+    // Nº de filas de evaluations agregadas para este usuario.
+    totalEvaluations: number;
+    // Nº de inspections distintas (una inspección puede tener varias
+    // evaluations si se re-evalúa).
     totalInspections: number;
+    overallPercentage: number;
+    overallRating: string;
+    minScore: number;
+    maxScore: number;
+    totalScoreSum: number;
+    totalMaxScoreSum: number;
+    evaluations: Array<{
+        id: string;
+        totalScore: number;
+        maxPossibleScore: number;
+        percentage: number;
+        rating: string;
+        inspection: {
+            id: string;
+            projectCode: string;
+            instalationName: string;
+            dateTime: string;
+            client: { clientName: string } | null;
+            activities: {
+                edges: Array<{
+                    node: { id: string; activityText: string };
+                }>;
+            };
+            observation: { observationText: string } | null;
+        };
+    }>;
 }
 
 export interface EvaluationsSummary {
@@ -211,43 +246,110 @@ export async function getEvaluationsSummary(
         );
     }
 
+    // Rating cualitativo derivado del porcentaje. Las páginas (Dashboard,
+    // Detalle) esperan los valores en mayúsculas y mapean MALO → "bad".
+    const ratingFromPercentage = (pct: number): string => {
+        if (pct >= 95) return "EXCELENTE";
+        if (pct >= 80) return "BUENO";
+        if (pct >= 60) return "REGULAR";
+        return "MALO";
+    };
+
     // Agrupar por usuario
-    const byUser = new Map<
-        string,
-        {
-            user: EvaluationsSummaryUser["user"];
-            sum: number;
-            count: number;
-            inspectionIds: Set<string>;
-        }
-    >();
+    type Slot = {
+        user: EvaluationsSummaryUser["user"];
+        pctSum: number;
+        scoreSum: number;
+        maxScoreSum: number;
+        count: number;
+        minPct: number;
+        maxPct: number;
+        inspectionIds: Set<string>;
+        evaluations: EvaluationsSummaryUser["evaluations"];
+    };
+    const byUser = new Map<string, Slot>();
     for (const r of rows) {
         const u = r.inspection!.user;
         if (!u) continue;
         const key = u.id;
-        const slot =
+        const pct = Number(r.percentage ?? 0);
+        const slot: Slot =
             byUser.get(key) ??
             {
                 user: {
                     id: u.id,
+                    email: u.email,
                     firstName: u.first_name,
                     lastName: u.last_name,
                     userType: ROLE_MAP[u.user_type] ?? u.user_type,
                 },
-                sum: 0,
+                pctSum: 0,
+                scoreSum: 0,
+                maxScoreSum: 0,
                 count: 0,
+                minPct: Number.POSITIVE_INFINITY,
+                maxPct: Number.NEGATIVE_INFINITY,
                 inspectionIds: new Set<string>(),
+                evaluations: [],
             };
-        slot.sum += Number(r.percentage ?? 0);
+        slot.pctSum += pct;
+        slot.scoreSum += Number(r.total_score ?? 0);
+        slot.maxScoreSum += Number(r.max_possible_score ?? 0);
         slot.count += 1;
+        if (pct < slot.minPct) slot.minPct = pct;
+        if (pct > slot.maxPct) slot.maxPct = pct;
         slot.inspectionIds.add(r.inspection!.id);
+        slot.evaluations.push({
+            id: r.id,
+            totalScore: Number(r.total_score ?? 0),
+            maxPossibleScore: Number(r.max_possible_score ?? 0),
+            percentage: pct,
+            rating: (r.rating ?? "").toString().toUpperCase(),
+            inspection: {
+                id: r.inspection!.id,
+                projectCode: r.inspection!.project_code,
+                instalationName: r.inspection!.instalation_name,
+                dateTime: r.inspection!.date_time,
+                client: r.inspection!.client
+                    ? { clientName: r.inspection!.client.client_name }
+                    : null,
+                activities: {
+                    edges: r.inspection!.activities
+                        .filter((a) => !!a.activity)
+                        .map((a, idx) => ({
+                            node: {
+                                id: `${r.inspection!.id}-act-${idx}`,
+                                activityText: a.activity!.activity_text,
+                            },
+                        })),
+                },
+                observation: r.inspection!.observation?.observation_text
+                    ? {
+                          observationText:
+                              r.inspection!.observation!.observation_text!,
+                      }
+                    : null,
+            },
+        });
         byUser.set(key, slot);
     }
-    let users: EvaluationsSummaryUser[] = [...byUser.values()].map((s) => ({
-        user: s.user,
-        averageScore: s.count ? Math.round((s.sum / s.count) * 100) / 100 : 0,
-        totalInspections: s.inspectionIds.size,
-    }));
+    let users: EvaluationsSummaryUser[] = [...byUser.values()].map((s) => {
+        const avgPct = s.count ? Math.round((s.pctSum / s.count) * 100) / 100 : 0;
+        return {
+            user: s.user,
+            averageScore: avgPct,
+            averageMaxScore: 100,
+            totalEvaluations: s.count,
+            totalInspections: s.inspectionIds.size,
+            overallPercentage: avgPct,
+            overallRating: s.count ? ratingFromPercentage(avgPct) : "",
+            minScore: s.count ? Math.round(s.minPct * 100) / 100 : 0,
+            maxScore: s.count ? Math.round(s.maxPct * 100) / 100 : 0,
+            totalScoreSum: s.scoreSum,
+            totalMaxScoreSum: s.maxScoreSum,
+            evaluations: s.evaluations,
+        };
+    });
 
     // evaluationCountMin
     if (vars.evaluationCountMin !== undefined) {

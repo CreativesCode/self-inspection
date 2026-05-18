@@ -130,6 +130,7 @@ export function MobileHeader() {
   const { isDark } = useTheme();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const unread = useUnreadNotificationsCount();
 
   // Cerrar drawer al cambiar de ruta
@@ -162,7 +163,53 @@ export function MobileHeader() {
     [user],
   );
 
-  if (!user) return null;
+  // Visitantes (landing /): top-bar mínima con logo y CTA a login. Sin
+  // esto, en móvil no había forma de acceder a /login desde arriba de la
+  // página (la versión completa requiere user logueado).
+  if (!user) {
+    return (
+      <>
+        <header
+          style={{
+            paddingTop: "env(safe-area-inset-top, 0px)",
+            paddingLeft: "max(env(safe-area-inset-left, 0px), 0px)",
+            paddingRight: "max(env(safe-area-inset-right, 0px), 0px)",
+          }}
+          className={cn(
+            "fixed inset-x-0 top-0 z-[1900] w-full sm:hidden",
+            "border-b border-hairline bg-surface/85 backdrop-blur-xl",
+            "dark:border-hairline-dark dark:bg-dark-bg-2/85",
+          )}
+        >
+          <div className="flex h-14 w-full items-center justify-between gap-2 px-3">
+            <Link
+              href="/"
+              aria-label="Safe 360 inicio"
+              className="flex h-10 items-center"
+            >
+              <Logo size={26} />
+            </Link>
+            <Link
+              href="/login"
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[13px] font-semibold",
+                "bg-grad-brand text-white shadow-brand-glow",
+              )}
+            >
+              <ShieldCheck size={13} />
+              Iniciar sesión
+            </Link>
+          </div>
+        </header>
+        {/* Spacer 56px + notch */}
+        <div
+          aria-hidden
+          style={{ height: "calc(env(safe-area-inset-top, 0px) + 3.5rem)" }}
+          className="sm:hidden"
+        />
+      </>
+    );
+  }
 
   const fullName = `${user.firstName} ${user.lastName}`;
   const initials =
@@ -172,13 +219,20 @@ export function MobileHeader() {
     : null;
 
   const handleLogout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    setLogoutOpen(false);
+    setDrawerOpen(false);
+    // Navegamos primero para que la UI responda al instante; el signOut
+    // de Supabase (red) sigue corriendo en segundo plano. Antes esperábamos
+    // el await y la app se sentía "trabada" mientras el round-trip ocurría.
+    router.push("/login");
     try {
-      setLogoutOpen(false);
-      setDrawerOpen(false);
       await logout();
-      router.push("/login");
     } catch (error) {
       notifyError(fromGenericError(error, "Error al cerrar sesión"));
+    } finally {
+      setLoggingOut(false);
     }
   };
 
@@ -370,13 +424,16 @@ export function MobileHeader() {
               <button
                 type="button"
                 onClick={() => setLogoutOpen(true)}
+                disabled={loggingOut}
+                style={{ touchAction: "manipulation" }}
                 className={cn(
                   "flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-left text-[13px] font-semibold",
                   "text-primary-600 hover:bg-[rgba(var(--accent-rgb),0.08)]",
+                  "disabled:opacity-60 disabled:cursor-not-allowed",
                 )}
               >
                 <LogOut size={15} />
-                Cerrar sesión
+                {loggingOut ? "Cerrando sesión…" : "Cerrar sesión"}
               </button>
             </div>
           </aside>
