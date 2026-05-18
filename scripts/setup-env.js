@@ -41,16 +41,6 @@ function createEnvFile() {
 
     console.log("✅ Archivo .env creado exitosamente!");
     console.log("📁 Ubicación:", envPath);
-    console.log("");
-    console.log("📋 Variables configuradas:");
-    console.log("   - NEXT_PUBLIC_API_URL: https://www.safe.360ingeco.com/backend");
-    console.log(
-      "   - NEXT_PUBLIC_GRAPHQL_URL: https://www.safe.360ingeco.com/backend/graphql/"
-    );
-    console.log("   - NEXT_PUBLIC_ADMIN_URL: https://www.safe.360ingeco.com/backend/admin/");
-    console.log("");
-    console.log("🔧 Configuración de producción activa con AWS Load Balancer.");
-    console.log("   API URL: https://www.safe.360ingeco.com/backend");
   } catch (error) {
     console.error("❌ Error creando el archivo .env:", error.message);
     process.exit(1);

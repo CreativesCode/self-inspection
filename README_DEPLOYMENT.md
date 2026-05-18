@@ -1,6 +1,6 @@
 # Frontend Deployment Guide
 
-This document describes how to build and deploy the Next.js frontend as a Single Page Application (SPA) using Docker with Node.js serve, ready for AWS Load Balancer integration and Capacitor mobile app generation.
+This document describes how to build and deploy the Next.js frontend as a Single Page Application (SPA) on Vercel and how to package it as a Capacitor mobile app.
 
 ## Overview
 
@@ -90,7 +90,6 @@ The frontend is now served using Node.js `serve` package which:
 - Serves the SPA directly from the `/app/out` directory
 - Handles SPA routing with automatic fallback to `index.html` (via `-s` flag)
 - Runs on port 80 for direct access
-- Compatible with AWS Load Balancer routing
 - Perfect for Capacitor mobile app generation
 
 ## API Access Configuration
@@ -113,31 +112,6 @@ All routes automatically fallback to `index.html`, ensuring proper SPA behavior:
 - Client-side routing works correctly
 - Direct URL access to any route works
 - Browser refresh on any route works
-
-## AWS Load Balancer Integration
-
-The application is optimized for AWS Load Balancer deployment:
-
-### Architecture
-- **Frontend**: Served on port 80 via Node.js `serve`
-- **Backend**: Exposed on port 8000 via Django
-- **Load Balancer**: Routes traffic to appropriate services
-- **SSL/TLS**: Terminated at Load Balancer level with ACM certificates
-
-### Load Balancer Configuration
-1. **Target Groups**: 
-   - Frontend: Port 80 (health check: `/`)
-   - Backend: Port 8000 (health check: `/admin/`)
-2. **Listener Rules**: Route based on path patterns
-3. **SSL**: AWS Certificate Manager integration
-
-### Environment Variables for Production
-Update your `.env` file when deploying behind ALB:
-```bash
-NEXT_PUBLIC_API_URL=https://your-alb-domain.com
-NEXT_PUBLIC_GRAPHQL_URL=https://your-alb-domain.com/graphql/
-NEXT_PUBLIC_ADMIN_URL=https://your-alb-domain.com/admin/
-```
 
 ## Capacitor Mobile App Integration
 
