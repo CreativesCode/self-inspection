@@ -615,8 +615,8 @@ export default function EditInspectionPageClient() {
   }
 
   return (
-    <div className="min-h-screen bg-bg text-ink dark:bg-dark-bg dark:text-dark-ink">
-      <main className="mx-auto max-w-[1320px] px-4 pb-32 pt-5 sm:px-8 sm:pt-7 lg:pb-16">
+    <div className="min-h-screen overflow-x-hidden bg-bg text-ink dark:bg-dark-bg dark:text-dark-ink">
+      <main className="mx-auto max-w-[1320px] px-3 pb-32 pt-5 sm:px-8 sm:pt-7 lg:pb-16">
         {/* Breadcrumb */}
         <nav className="mb-4 flex items-center gap-2 text-sm text-ink-2 dark:text-dark-ink-2">
           <button
@@ -730,10 +730,10 @@ export default function EditInspectionPageClient() {
 
         <form
           onSubmit={handleSubmit}
-          className="grid gap-5 lg:grid-cols-[1.6fr_1fr]"
+          className="grid min-w-0 gap-5 lg:grid-cols-[1.6fr_1fr]"
         >
           {/* ─── Columna izquierda ─── */}
-          <div className="flex flex-col gap-5">
+          <div className="flex min-w-0 flex-col gap-5">
             {/* Identificación */}
             <Card radius={20}>
               <SectionHead
@@ -930,7 +930,7 @@ export default function EditInspectionPageClient() {
                 {formData.subcontrateNames.map((name, index) => (
                   <div
                     key={`${name}-${index}`}
-                    className="flex items-center gap-3 rounded-[14px] border border-hairline bg-bg-2 p-3 dark:border-hairline-dark dark:bg-white/[0.03]"
+                    className="flex min-w-0 items-center gap-3 rounded-[14px] border border-hairline bg-bg-2 p-3 dark:border-hairline-dark dark:bg-white/[0.03]"
                   >
                     <Avatar
                       name={name
@@ -941,7 +941,7 @@ export default function EditInspectionPageClient() {
                         .toUpperCase()}
                       size={32}
                     />
-                    <div className="flex-1 text-sm font-semibold">{name}</div>
+                    <div className="min-w-0 flex-1 truncate text-sm font-semibold">{name}</div>
                     <IconBtn
                       tone="bad"
                       type="button"
@@ -1162,18 +1162,18 @@ export default function EditInspectionPageClient() {
           </div>
 
           {/* ─── Sidebar derecho ─── */}
-          <div className="flex flex-col gap-5">
+          <div className="flex min-w-0 flex-col gap-5">
             {/* Resumen de cambios */}
-            <Card glow radius={20}>
+            <Card glow radius={20} className="overflow-hidden">
               <div className="text-[11px] font-bold uppercase tracking-widest text-primary-500">
                 Resumen de cambios
               </div>
-              <div className="mt-1.5 text-2xl font-extrabold tracking-tight">
+              <div className="mt-1.5 break-words text-2xl font-extrabold tracking-tight">
                 {hasChanges
                   ? `${totalChanges} ${totalChanges === 1 ? "campo modificado" : "campos modificados"}`
                   : "Sin cambios"}
               </div>
-              <div className="text-[13px] text-ink-2 dark:text-dark-ink-2">
+              <div className="break-words text-[13px] text-ink-2 dark:text-dark-ink-2">
                 Los cambios quedan registrados con tu nombre y fecha.
               </div>
 
@@ -1193,7 +1193,7 @@ export default function EditInspectionPageClient() {
             </Card>
 
             {/* Ubicación GPS */}
-            <Card radius={20} padding={0}>
+            <Card radius={20} padding={0} className="overflow-hidden">
               <div className="px-5 pb-3.5 pt-5">
                 <SectionHead
                   title="Ubicación GPS"
@@ -1431,7 +1431,7 @@ function DiffSelectField({
       </div>
       <div
         className={cn(
-          "mt-1.5 flex items-center gap-2.5 rounded-[12px] border px-3.5 py-3",
+          "mt-1.5 flex items-center gap-2.5 overflow-hidden rounded-[12px] border px-3.5 py-3",
           changed
             ? "border-[rgba(232,163,61,0.32)] bg-[rgba(232,163,61,0.08)]"
             : "border-hairline bg-bg-2 dark:border-hairline-dark dark:bg-white/[0.03]",
@@ -1444,7 +1444,7 @@ function DiffSelectField({
         )}
         <select
           {...rest}
-          className="flex-1 cursor-pointer appearance-none bg-transparent text-sm text-ink outline-none disabled:cursor-not-allowed dark:text-dark-ink"
+          className="w-full min-w-0 flex-1 cursor-pointer appearance-none truncate bg-transparent text-sm text-ink outline-none disabled:cursor-not-allowed dark:text-dark-ink"
           disabled={loading || rest.disabled}
         >
           {children}

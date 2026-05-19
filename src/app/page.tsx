@@ -105,7 +105,14 @@ const CLIENT_LOGOS = [
 
 export default function Home() {
   const isLoading = useAuthStore((s) => s.isLoading);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const { isDark } = useTheme();
+
+  // Destinos protegidos: si no hay sesión mandamos a /login.
+  // Evaluaciones es la única vista pública, por eso queda fuera de este gate.
+  const createInspectionHref = isAuthenticated
+    ? "/inspections/create"
+    : "/login";
 
   if (isLoading) {
     return (
@@ -145,13 +152,11 @@ export default function Home() {
               obra civil.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button
-                size="lg"
-                icon={<Plus size={16} />}
-                onClick={() => (window.location.href = "/inspections/create")}
-              >
-                Nueva inspección
-              </Button>
+              <Link href={createInspectionHref}>
+                <Button size="lg" icon={<Plus size={16} />}>
+                  Nueva inspección
+                </Button>
+              </Link>
               <Link href="/evaluations">
                 <Button
                   variant="ghost"

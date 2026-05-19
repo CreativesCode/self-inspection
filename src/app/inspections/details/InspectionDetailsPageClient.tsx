@@ -330,7 +330,7 @@ export default function InspectionDetailsPageClient() {
   }
 
   return (
-    <div className="min-h-screen bg-bg text-ink dark:bg-dark-bg dark:text-dark-ink">
+    <div className="min-h-screen overflow-x-hidden bg-bg text-ink dark:bg-dark-bg dark:text-dark-ink">
       <main className="mx-auto max-w-[1320px] px-3 pb-16 pt-5 sm:px-8 sm:pt-8">
         {/* ─── Breadcrumb ─── */}
         <nav className="mb-4 flex items-center gap-2 text-sm text-ink-2 dark:text-dark-ink-2">
@@ -457,9 +457,9 @@ export default function InspectionDetailsPageClient() {
         </Card>
 
         {/* ─── Grid principal ─── */}
-        <div className="mt-5 grid gap-5 lg:grid-cols-[1.4fr_1fr]">
+        <div className="mt-5 grid min-w-0 gap-5 lg:grid-cols-[1.4fr_1fr]">
           {/* ─── Columna izquierda ─── */}
-          <div className="flex flex-col gap-5">
+          <div className="flex min-w-0 flex-col gap-5">
             {/* Actividades inspeccionadas */}
             <Card radius={20}>
               <SectionHead
@@ -583,7 +583,7 @@ export default function InspectionDetailsPageClient() {
           </div>
 
           {/* ─── Columna derecha ─── */}
-          <div className="flex flex-col gap-5">
+          <div className="flex min-w-0 flex-col gap-5">
             {/* Ubicación + mapa */}
             <Card radius={20} padding={0}>
               <div className="px-5 pb-3.5 pt-5">

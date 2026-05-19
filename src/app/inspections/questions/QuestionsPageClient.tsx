@@ -1466,7 +1466,7 @@ export default function QuestionsPageClient() {
     null;
 
   return (
-    <div className="min-h-screen bg-bg text-ink dark:bg-dark-bg dark:text-dark-ink">
+    <div className="min-h-screen overflow-x-hidden bg-bg text-ink dark:bg-dark-bg dark:text-dark-ink">
       {showNotification && (
         <div
           className={cn(
@@ -1548,9 +1548,9 @@ export default function QuestionsPageClient() {
           </Card>
         )}
 
-        <div className="mt-5 grid gap-5 lg:grid-cols-[320px_1fr]">
+        <div className="mt-5 grid min-w-0 gap-5 lg:grid-cols-[320px_1fr]">
           {/* ─── Sidebar (debajo de las preguntas en mobile) ─── */}
-          <div className="order-2 flex flex-col gap-3 lg:order-1">
+          <div className="order-2 flex min-w-0 flex-col gap-3 lg:order-1">
             <Card radius={18} padding={16}>
               <div className="text-[11px] font-bold uppercase tracking-widest text-ink-2 dark:text-dark-ink-2">
                 Secciones
@@ -1692,7 +1692,7 @@ export default function QuestionsPageClient() {
           </div>
 
           {/* ─── Preguntas (columna principal) ─── */}
-          <div className="order-1 flex flex-col gap-4 lg:order-2">
+          <div className="order-1 flex min-w-0 flex-col gap-4 lg:order-2">
             {headers.map((header, headerIndex) => {
               const { totalQuestions: t, answeredQuestions: a } =
                 getHeaderStats(header);
