@@ -147,6 +147,9 @@ export default function CreateInspectionPageClient() {
     photos: [],
   });
 
+  // Colapsa el encabezado en mobile al hacer scroll (ver header más abajo).
+  const [headerCollapsed, setHeaderCollapsed] = useState(false);
+
   const [newSubcontrateName, setNewSubcontrateName] = useState("");
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
@@ -329,6 +332,27 @@ export default function CreateInspectionPageClient() {
   });
 
   // ─── Effects ───
+  // Colapsa el encabezado en mobile al hacer scroll. El scroll vive en la
+  // ventana normalmente, pero pasa al <form> cuando el teclado está abierto
+  // (body.keyboard-open .mobile-scroll-container), así que escuchamos en fase
+  // de captura para cazar el evento venga de donde venga (scroll no burbujea).
+  useEffect(() => {
+    const onScroll = (e: Event) => {
+      const target = e.target as HTMLElement | Document | null;
+      const top =
+        target instanceof HTMLElement && target.scrollTop > 0
+          ? target.scrollTop
+          : window.scrollY;
+      setHeaderCollapsed(top > 24);
+    };
+    window.addEventListener("scroll", onScroll, {
+      passive: true,
+      capture: true,
+    });
+    return () =>
+      window.removeEventListener("scroll", onScroll, { capture: true });
+  }, []);
+
   useEffect(() => {
     if (latitude !== null && longitude !== null) {
       setFormData((p) => ({
@@ -589,8 +613,21 @@ export default function CreateInspectionPageClient() {
           </span>
         </nav>
 
-        {/* ─── Header con Stepper ─── */}
-        <header className="mb-6 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        {/* ─── Header con Stepper ───
+            En mobile se colapsa al hacer scroll: el bloque título/descripción
+            ocupa mucho alto y, al abrir el teclado, deja casi sin área útil el
+            formulario. Cuando estás arriba del todo se ve; al bajar se oculta
+            con una transición. En sm+ siempre permanece visible. */}
+        <header
+          className={cn(
+            "flex flex-col gap-5 overflow-hidden transition-all duration-300 ease-out lg:flex-row lg:items-end lg:justify-between",
+            headerCollapsed
+              ? "mb-0 max-h-0 -translate-y-1 opacity-0"
+              : "mb-6 max-h-[260px] translate-y-0 opacity-100",
+            // En tablet/escritorio nunca se colapsa.
+            "sm:!mb-6 sm:!max-h-none sm:!translate-y-0 sm:!opacity-100",
+          )}
+        >
           <div>
             <div className="text-xs font-bold uppercase tracking-widest text-primary-500">
               Paso 1 de 2
