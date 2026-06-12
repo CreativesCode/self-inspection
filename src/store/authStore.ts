@@ -153,17 +153,24 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
 
         // Suscripción global: sincroniza el store con cambios del SDK
         // (login, logout, autorefresh, updateUser, etc.).
-        supabase.auth.onAuthStateChange(async (event, newSession) => {
+        //
+        // OJO: el callback NO puede hacer `await` de otros métodos de
+        // supabase (getUser/getSession/queries). auth-js lo invoca mientras
+        // mantiene su lock interno (p.ej. durante updateUser → USER_UPDATED),
+        // y esas llamadas esperan ese mismo lock → deadlock: updateUser no
+        // resuelve nunca. Por eso el trabajo async se difiere con setTimeout,
+        // tal y como recomienda la documentación de Supabase.
+        supabase.auth.onAuthStateChange((event, newSession) => {
             if (event === "SIGNED_OUT" || !newSession) {
                 set({ user: null, token: null, isAuthenticated: false });
                 return;
             }
-            const user = await loadProfileForCurrentSession();
-            set({
-                user,
-                token: newSession.access_token,
-                isAuthenticated: !!user,
-            });
+            set({ token: newSession.access_token });
+            setTimeout(() => {
+                void loadProfileForCurrentSession().then((user) => {
+                    set({ user, isAuthenticated: !!user });
+                });
+            }, 0);
         });
     },
 
@@ -234,13 +241,18 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     },
 
     changePassword: async (newPassword) => {
-        const { error } = await supabase.auth.updateUser({
-            password: newPassword,
-            data: { must_change_password: false },
-        });
-        if (error) throw error;
-        // Refrescar el user del store para reflejar el nuevo metadata
-        await get().refetchMe();
+        set({ isLoading: true });
+        try {
+            const { error } = await supabase.auth.updateUser({
+                password: newPassword,
+                data: { must_change_password: false },
+            });
+            if (error) throw error;
+            // Refrescar el user del store para reflejar el nuevo metadata
+            await get().refetchMe();
+        } finally {
+            set({ isLoading: false });
+        }
     },
 
     makeAuthenticatedRequest: async <T,>(request: () => Promise<T>): Promise<T> => {
