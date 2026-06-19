@@ -204,10 +204,14 @@ export async function updateUser(vars: {
     phoneNumber?: string;
     address?: string;
     bio?: string;
-    /** No se actualiza desde aquí — para password usar el flow /cambiar-password. */
+    /**
+     * Si viene una contraseña no vacía, se invoca la Edge Function
+     * `admin-update-password` (service_role → `auth.admin.updateUserById`).
+     * La tabla `profiles` no puede tocar `auth.users`. Dejar en blanco
+     * mantiene la contraseña actual.
+     */
     password?: string;
 }): Promise<{ updateUser: { user: { id: string }; errors: NO_ERRORS } }> {
-    void vars.password;
     const dbRole = ROLE_UI_TO_DB[vars.userType] ?? "jefe_de_trabajo";
     const { error } = await supabase
         .from("profiles")
@@ -222,6 +226,19 @@ export async function updateUser(vars: {
         })
         .eq("id", vars.id);
     if (error) throw error;
+
+    const newPassword = vars.password?.trim();
+    if (newPassword) {
+        const { data, error: pwError } = await supabase.functions.invoke<{
+            success?: boolean;
+            error?: string;
+        }>("admin-update-password", {
+            body: { id: vars.id, password: newPassword },
+        });
+        if (pwError) throw pwError;
+        if (data?.error) throw new Error(data.error);
+    }
+
     return { updateUser: { user: { id: vars.id }, errors: NO_ERRORS } };
 }
 

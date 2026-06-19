@@ -6,6 +6,7 @@ import { fromGenericError, notifyError } from "@/lib/error-service";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store";
 import { ArrowRight, Check, Eye, EyeOff, Lock, Mail } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -213,12 +214,12 @@ export default function LoginPageClient() {
                   </span>
                   Recordarme
                 </button>
-                <a
-                  href="#"
+                <Link
+                  href="/recuperar-password"
                   className="font-semibold text-primary-500 hover:text-primary-600"
                 >
                   ¿Olvidaste tu contraseña?
-                </a>
+                </Link>
               </div>
 
               <Button

@@ -60,6 +60,13 @@ interface AuthState {
     checkAuth: () => Promise<void>;
     initialize: () => Promise<void>;
     changePassword: (newPassword: string) => Promise<void>;
+    /** Envía el correo de recuperación de contraseña (flujo "olvidé mi contraseña"). */
+    requestPasswordReset: (email: string) => Promise<void>;
+    /** Establece la sesión a partir de los tokens del enlace de recuperación. */
+    recoverSessionFromTokens: (
+        accessToken: string,
+        refreshToken: string,
+    ) => Promise<void>;
     /** Legacy helper: con Supabase ya no hace falta envolver requests porque
      *  el SDK adjunta el token automáticamente. Se mantiene la firma para
      *  no tocar los componentes que la invocan. */
@@ -253,6 +260,25 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         } finally {
             set({ isLoading: false });
         }
+    },
+
+    requestPasswordReset: async (email) => {
+        // El enlace del correo redirige aquí con los tokens en el hash de la URL
+        // (flujo implícito). `/restablecer-password` los procesa con
+        // `recoverSessionFromTokens`.
+        const redirectTo = `${window.location.origin}/restablecer-password`;
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo,
+        });
+        if (error) throw error;
+    },
+
+    recoverSessionFromTokens: async (accessToken, refreshToken) => {
+        const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+        });
+        if (error) throw error;
     },
 
     makeAuthenticatedRequest: async <T,>(request: () => Promise<T>): Promise<T> => {

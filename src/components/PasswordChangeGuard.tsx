@@ -26,6 +26,9 @@ export function PasswordChangeGuard() {
     useEffect(() => {
         if (!initialized || !isAuthed || !mustChange) return;
         if (pathname === "/cambiar-password") return;
+        // El flujo de recuperación crea una sesión temporal para que el usuario
+        // fije su contraseña ahí mismo; no lo desviamos a /cambiar-password.
+        if (pathname === "/restablecer-password") return;
         router.replace("/cambiar-password");
     }, [initialized, isAuthed, mustChange, pathname, router]);
 
