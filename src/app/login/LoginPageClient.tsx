@@ -2,7 +2,6 @@
 
 import { useApp } from "@/contexts/AppContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import { fromGenericError, notifyError } from "@/lib/error-service";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store";
 import { ArrowRight, Check, Eye, EyeOff, Lock, Mail } from "lucide-react";
@@ -21,6 +20,28 @@ const HERO_STATS = [
   { k: "37s", l: "Por pregunta en promedio" },
 ];
 
+/** Traduce el error de Supabase Auth a un mensaje claro para el usuario. */
+function loginErrorMessage(error: unknown): string {
+  const raw = error instanceof Error ? error.message : String(error);
+  const msg = raw.toLowerCase();
+  if (
+    msg.includes("invalid login credentials") ||
+    msg.includes("invalid_credentials")
+  ) {
+    return "Correo o contraseña incorrectos. Verifica tus datos e inténtalo de nuevo.";
+  }
+  if (msg.includes("email not confirmed")) {
+    return "Tu correo aún no está confirmado. Contacta al administrador de tu obra.";
+  }
+  if (msg.includes("too many requests") || msg.includes("rate limit")) {
+    return "Demasiados intentos. Espera un momento e inténtalo de nuevo.";
+  }
+  if (msg.includes("failed to fetch") || msg.includes("network")) {
+    return "No se pudo conectar. Revisa tu conexión e inténtalo de nuevo.";
+  }
+  return "No se pudo iniciar sesión. Inténtalo de nuevo.";
+}
+
 export default function LoginPageClient() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const user = useAuthStore((s) => s.user);
@@ -34,6 +55,7 @@ export default function LoginPageClient() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(true);
+  const [formError, setFormError] = useState<string | null>(null);
 
   // Redirección post-login (lógica idéntica a la versión anterior)
   useEffect(() => {
@@ -52,6 +74,7 @@ export default function LoginPageClient() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
     try {
       await login(email, password);
       addNotification({
@@ -60,12 +83,7 @@ export default function LoginPageClient() {
         duration: 3000,
       });
     } catch (error) {
-      if (
-        error instanceof Error &&
-        !error.message.includes("Error de autenticación")
-      ) {
-        notifyError(fromGenericError(error, "Error al iniciar sesión"));
-      }
+      setFormError(loginErrorMessage(error));
     }
   };
 
@@ -221,6 +239,15 @@ export default function LoginPageClient() {
                   ¿Olvidaste tu contraseña?
                 </Link>
               </div>
+
+              {formError && (
+                <p
+                  role="alert"
+                  className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-500"
+                >
+                  {formError}
+                </p>
+              )}
 
               <Button
                 type="submit"
