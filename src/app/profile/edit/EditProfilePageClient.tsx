@@ -17,9 +17,14 @@ import { useAuthStore } from "@/store";
 import { useMutation } from "@/lib/apollo-compat";
 import {
   AlertCircle,
+  CheckCircle2,
   ChevronLeft,
+  Eye,
+  EyeOff,
   FileText,
+  KeyRound,
   Loader2,
+  Lock,
   Mail,
   MapPin,
   Phone,
@@ -28,16 +33,29 @@ import {
   User as UserIcon,
   X,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useMemo, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+
+const PWD_MIN_LENGTH = 8;
+
+function validatePassword(pwd: string): string | null {
+  if (pwd.length < PWD_MIN_LENGTH)
+    return `Mínimo ${PWD_MIN_LENGTH} caracteres.`;
+  if (!/[A-Z]/.test(pwd)) return "Incluye al menos una mayúscula.";
+  if (!/[a-z]/.test(pwd)) return "Incluye al menos una minúscula.";
+  if (!/[0-9]/.test(pwd)) return "Incluye al menos un número.";
+  return null;
+}
 
 export default function EditProfilePageClient() {
   const user = useAuthStore((s) => s.user);
   const refetchMe = useAuthStore((s) => s.refetchMe);
+  const changePassword = useAuthStore((s) => s.changePassword);
   const makeAuthenticatedRequest = useAuthStore(
     (s) => s.makeAuthenticatedRequest,
   );
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const initial = useMemo(
     () => ({
@@ -59,6 +77,56 @@ export default function EditProfilePageClient() {
     code?: string;
   };
   const [submitErrors, setSubmitErrors] = useState<SubmitErrorEntry[]>([]);
+
+  // ── Cambio de contraseña (el propio usuario sobre su cuenta) ──
+  const passwordCardRef = useRef<HTMLDivElement | null>(null);
+  const [pwd, setPwd] = useState("");
+  const [confirmPwd, setConfirmPwd] = useState("");
+  const [showPwd, setShowPwd] = useState(false);
+  const [pwdError, setPwdError] = useState<string | null>(null);
+  const [pwdSuccess, setPwdSuccess] = useState(false);
+  const [pwdSubmitting, setPwdSubmitting] = useState(false);
+
+  // Si llegamos con ?focus=password (botón "Cambiar contraseña" del perfil),
+  // hacemos scroll a la sección de contraseña.
+  useEffect(() => {
+    if (searchParams.get("focus") === "password" && passwordCardRef.current) {
+      passwordCardRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  }, [searchParams]);
+
+  const handlePasswordChange = async () => {
+    setPwdError(null);
+    setPwdSuccess(false);
+    const v = validatePassword(pwd);
+    if (v) {
+      setPwdError(v);
+      return;
+    }
+    if (pwd !== confirmPwd) {
+      setPwdError("Las contraseñas no coinciden.");
+      return;
+    }
+    setPwdSubmitting(true);
+    try {
+      await changePassword(pwd);
+      setPwdSuccess(true);
+      setPwd("");
+      setConfirmPwd("");
+      setTimeout(() => setPwdSuccess(false), 4000);
+    } catch (err) {
+      setPwdError(
+        err instanceof Error
+          ? err.message
+          : "No se pudo cambiar la contraseña. Inténtalo de nuevo.",
+      );
+    } finally {
+      setPwdSubmitting(false);
+    }
+  };
 
   const [updateUser, { loading }] = useMutation(UpdateUser);
 
@@ -382,6 +450,86 @@ export default function EditProfilePageClient() {
                 )}
               />
             </Card>
+
+            <div ref={passwordCardRef}>
+            <Card radius={20}>
+              <SectionHead
+                title="Seguridad"
+                subtitle="Cambia la contraseña de tu cuenta"
+                icon={<Lock size={16} />}
+              />
+              <div className="mt-5 grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+                <Field
+                  label="Nueva contraseña"
+                  type={showPwd ? "text" : "password"}
+                  value={pwd}
+                  onChange={(e) => setPwd(e.target.value)}
+                  icon={<KeyRound size={16} />}
+                  placeholder="Mínimo 8 caracteres"
+                  autoComplete="new-password"
+                  suffix={
+                    <button
+                      type="button"
+                      onClick={() => setShowPwd((s) => !s)}
+                      aria-label={
+                        showPwd ? "Ocultar contraseña" : "Mostrar contraseña"
+                      }
+                      className="text-ink-2 hover:text-ink dark:text-dark-ink-2"
+                    >
+                      {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  }
+                />
+                <Field
+                  label="Confirmar contraseña"
+                  type={showPwd ? "text" : "password"}
+                  value={confirmPwd}
+                  onChange={(e) => setConfirmPwd(e.target.value)}
+                  icon={<ShieldCheck size={16} />}
+                  placeholder="Repite la contraseña"
+                  autoComplete="new-password"
+                />
+              </div>
+
+              <ul className="ml-1 mt-3 list-disc pl-4 text-xs text-ink-2 dark:text-dark-ink-2">
+                <li>Mínimo {PWD_MIN_LENGTH} caracteres.</li>
+                <li>Al menos una mayúscula, una minúscula y un número.</li>
+              </ul>
+
+              {pwdError && (
+                <p
+                  role="alert"
+                  className="mt-3 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-500"
+                >
+                  {pwdError}
+                </p>
+              )}
+              {pwdSuccess && (
+                <p className="mt-3 inline-flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 size={15} /> Contraseña actualizada
+                  correctamente.
+                </p>
+              )}
+
+              <div className="mt-4 flex justify-end">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={pwdSubmitting || !pwd || !confirmPwd}
+                  onClick={handlePasswordChange}
+                  icon={
+                    pwdSubmitting ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <Lock size={14} />
+                    )
+                  }
+                >
+                  {pwdSubmitting ? "Guardando…" : "Cambiar contraseña"}
+                </Button>
+              </div>
+            </Card>
+            </div>
 
             <div className="flex flex-wrap justify-between gap-2.5">
               <Button
