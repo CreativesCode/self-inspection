@@ -140,11 +140,14 @@ export function QuestionCard({
                 </button>
               );
             })}
-            {/* El chip "Nota" sólo aparece cuando la reacción es "Mal" y ya
-                existe una observación guardada: sirve para volver a abrir el
-                modal y ver/editar la nota. Cuando se selecciona "Mal" por
-                primera vez, el modal se abre automáticamente desde la página. */}
-            {reaction === "Mal" && observation && observation.text && (
+            {/* El chip "Nota" sólo aparece cuando la reacción es "Mal" o
+                "Regular" y ya existe una observación guardada: sirve para
+                volver a abrir el modal y ver/editar la nota. Cuando se
+                selecciona "Mal" o "Regular" por primera vez, el modal se abre
+                automáticamente desde la página. */}
+            {(reaction === "Mal" || reaction === "Regular") &&
+              observation &&
+              observation.text && (
               <>
                 <div className="flex-1" />
                 <button

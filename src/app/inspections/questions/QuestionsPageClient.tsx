@@ -1116,7 +1116,9 @@ export default function QuestionsPageClient() {
       }
     });
 
-    if (reaction !== "Mal") {
+    // "Mal" y "Regular" requieren una observación: se abre el modal.
+    // El resto de reacciones se guardan directamente.
+    if (reaction !== "Mal" && reaction !== "Regular") {
       setObservations((prev) =>
         prev.filter((o) => o.questionId !== questionId),
       );
@@ -1124,7 +1126,7 @@ export default function QuestionsPageClient() {
       if (pollId && reaction) {
         saveAnswer(questionId, reaction, "", []);
       }
-    } else if (reaction === "Mal") {
+    } else {
       setCurrentQuestion({ id: questionId, text: questionText });
       setDialogOpen(true);
     }
@@ -1175,17 +1177,22 @@ export default function QuestionsPageClient() {
 
     const currentReaction = getReactionForQuestion(questionId);
 
+    // Conservar la reacción que abrió el modal ("Regular" o "Mal"). Si por
+    // alguna razón no hay una reacción válida, se asume "Mal" por defecto.
+    const reactionToSave: ReactionType =
+      currentReaction === "Regular" ? "Regular" : "Mal";
+
     if (pollId) {
-      if (currentReaction !== "Mal") {
+      if (currentReaction !== reactionToSave) {
         setReactions((prev) => {
           const newReactions = prev.filter((r) => r.questionId !== questionId);
-          newReactions.push({ questionId, reaction: "Mal" });
+          newReactions.push({ questionId, reaction: reactionToSave });
           return newReactions;
         });
       }
 
       // Esperar a que se complete el guardado
-      await saveAnswer(questionId, "Mal", text, photos);
+      await saveAnswer(questionId, reactionToSave, text, photos);
     }
 
     setDialogOpen(false);
@@ -1894,7 +1901,7 @@ export default function QuestionsPageClient() {
               const currentReaction = getReactionForQuestion(
                 currentQuestion.id
               );
-              if (currentReaction === "Mal") {
+              if (currentReaction === "Mal" || currentReaction === "Regular") {
                 setReactions((prev) =>
                   prev.filter((r) => r.questionId !== currentQuestion.id)
                 );
