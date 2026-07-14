@@ -42,7 +42,8 @@ export interface UIPoll {
             node: {
                 id: string;
                 questionText: string;
-                header: { id: string; headerText: string };
+                sortOrder: number;
+                header: { id: string; headerText: string; sortOrder: number };
                 answer: { edges: Array<{ node: UIAnswer }> };
             };
         }>;
@@ -61,7 +62,7 @@ interface Connection<T> {
 const POLL_BASE_SELECT = `
   id, status,
   evaluation:evaluations(id, total_score, max_possible_score, percentage, rating),
-  poll_questions(question:questions(id, question_text, header:headers(id, header_text))),
+  poll_questions(question:questions(id, question_text, sort_order, header:headers(id, header_text, sort_order))),
   answers(id, answer_text, question:questions(id), observation:observations(id, observation_text, photos:observation_photos(storage_path)))
 `;
 
@@ -88,7 +89,8 @@ interface RawPollRow {
         question: {
             id: string;
             question_text: string;
-            header: { id: string; header_text: string } | null;
+            sort_order: number | null;
+            header: { id: string; header_text: string; sort_order: number | null } | null;
         } | null;
     }>;
     answers: Array<{
@@ -156,6 +158,17 @@ function mapPoll(r: RawPollRow): UIPoll {
         question: {
             edges: r.poll_questions
                 .filter((pq) => pq.question)
+                // Ordena por encabezado y luego por pregunta según sort_order,
+                // de modo que el render y los reportes sigan el orden del
+                // documento fuente (Rev02) y no el de inserción.
+                .sort((a, b) => {
+                    const qa = a.question!;
+                    const qb = b.question!;
+                    const ha = qa.header?.sort_order ?? 0;
+                    const hb = qb.header?.sort_order ?? 0;
+                    if (ha !== hb) return ha - hb;
+                    return (qa.sort_order ?? 0) - (qb.sort_order ?? 0);
+                })
                 .map((pq) => {
                     const q = pq.question!;
                     const ans = answersByQuestion.get(q.id);
@@ -163,12 +176,14 @@ function mapPoll(r: RawPollRow): UIPoll {
                         node: {
                             id: q.id,
                             questionText: q.question_text,
+                            sortOrder: q.sort_order ?? 0,
                             header: q.header
                                 ? {
                                       id: q.header.id,
                                       headerText: q.header.header_text,
+                                      sortOrder: q.header.sort_order ?? 0,
                                   }
-                                : { id: "", headerText: "" },
+                                : { id: "", headerText: "", sortOrder: 0 },
                             answer: {
                                 edges: ans ? [{ node: ans }] : [],
                             },

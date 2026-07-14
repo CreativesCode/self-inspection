@@ -589,6 +589,8 @@ export type Database = {
           header_text: string
           id: string
           inspection_type_id: string
+          is_active: boolean
+          sort_order: number
           updated_at: string
         }
         Insert: {
@@ -596,6 +598,8 @@ export type Database = {
           header_text: string
           id?: string
           inspection_type_id: string
+          is_active?: boolean
+          sort_order?: number
           updated_at?: string
         }
         Update: {
@@ -603,6 +607,8 @@ export type Database = {
           header_text?: string
           id?: string
           inspection_type_id?: string
+          is_active?: boolean
+          sort_order?: number
           updated_at?: string
         }
         Relationships: [
@@ -1649,21 +1655,27 @@ export type Database = {
           created_at: string
           header_id: string
           id: string
+          is_active: boolean
           question_text: string
+          sort_order: number
           updated_at: string
         }
         Insert: {
           created_at?: string
           header_id: string
           id?: string
+          is_active?: boolean
           question_text: string
+          sort_order?: number
           updated_at?: string
         }
         Update: {
           created_at?: string
           header_id?: string
           id?: string
+          is_active?: boolean
           question_text?: string
+          sort_order?: number
           updated_at?: string
         }
         Relationships: [

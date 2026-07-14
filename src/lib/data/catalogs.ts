@@ -237,10 +237,12 @@ export async function getInspectionTypesWithHeaders(): Promise<{
     const { data, error, count } = await supabase
         .from("inspection_types")
         .select(
-            "id, name, created_at, updated_at, headers(id, header_text, created_at, updated_at)",
+            "id, name, created_at, updated_at, headers(id, header_text, sort_order, created_at, updated_at)",
             { count: "exact" },
         )
-        .order("name");
+        .eq("headers.is_active", true)
+        .order("name")
+        .order("sort_order", { referencedTable: "headers" });
     if (error) throw error;
     return {
         inspectionTypes: {
@@ -510,11 +512,19 @@ export async function getHeaders(vars: {
     let q = supabase
         .from("headers")
         .select(
-            "id, header_text, created_at, updated_at, inspection_type:inspection_types(id, name), questions(id, question_text, created_at, updated_at, header:headers(id, header_text))",
+            "id, header_text, sort_order, created_at, updated_at, inspection_type:inspection_types(id, name), questions(id, question_text, sort_order, created_at, updated_at, header:headers(id, header_text))",
             { count: "exact" },
-        );
+        )
+        // Solo encabezados/preguntas activos (Rev02). Los desactivados quedan
+        // en la BD para conservar el histórico, pero no forman parte de las
+        // inspecciones nuevas.
+        .eq("is_active", true)
+        .eq("questions.is_active", true);
     if (vars.inspectionType) q = q.eq("inspection_type_id", vars.inspectionType);
-    q = q.order("header_text").range(offset, offset + first - 1);
+    q = q
+        .order("sort_order")
+        .order("sort_order", { referencedTable: "questions" })
+        .range(offset, offset + first - 1);
     const { data, error, count } = await q;
     if (error) throw error;
     return {
@@ -604,11 +614,21 @@ export async function createHeader(vars: {
     headerText: string;
     inspectionTypeId: string;
 }): Promise<{ createHeader: { header: { id: string }; errors: NO_ERRORS } }> {
+    // Coloca el nuevo encabezado al final del orden del tipo de inspección.
+    const { data: last } = await supabase
+        .from("headers")
+        .select("sort_order")
+        .eq("inspection_type_id", vars.inspectionTypeId)
+        .order("sort_order", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+    const nextOrder = (last?.sort_order ?? 0) + 1;
     const { data, error } = await supabase
         .from("headers")
         .insert({
             header_text: vars.headerText,
             inspection_type_id: vars.inspectionTypeId,
+            sort_order: nextOrder,
         })
         .select("id")
         .single();
@@ -654,11 +674,17 @@ export async function getQuestions(vars: {
     let q = supabase
         .from("questions")
         .select(
-            "id, question_text, created_at, updated_at, header:headers(id, header_text)",
+            "id, question_text, sort_order, created_at, updated_at, header:headers(id, header_text)",
             { count: "exact" },
-        );
+        )
+        // Solo preguntas activas (Rev02); las congeladas se mantienen para el
+        // histórico pero no se listan en la administración de catálogos.
+        .eq("is_active", true);
     if (vars.header) q = q.eq("header_id", vars.header);
-    q = q.order("question_text").range(offset, offset + first - 1);
+    q = q
+        .order("sort_order")
+        .order("question_text")
+        .range(offset, offset + first - 1);
     const { data, error, count } = await q;
     if (error) throw error;
     return {
@@ -716,9 +742,22 @@ export async function createQuestion(vars: {
     questionText: string;
     headerId: string;
 }): Promise<{ createQuestion: { question: { id: string }; errors: NO_ERRORS } }> {
+    // Coloca la nueva pregunta al final del orden de su encabezado.
+    const { data: last } = await supabase
+        .from("questions")
+        .select("sort_order")
+        .eq("header_id", vars.headerId)
+        .order("sort_order", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+    const nextOrder = (last?.sort_order ?? 0) + 1;
     const { data, error } = await supabase
         .from("questions")
-        .insert({ question_text: vars.questionText, header_id: vars.headerId })
+        .insert({
+            question_text: vars.questionText,
+            header_id: vars.headerId,
+            sort_order: nextOrder,
+        })
         .select("id")
         .single();
     if (error) throw error;

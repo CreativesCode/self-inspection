@@ -59,12 +59,29 @@ export async function GetInspectionWithQuestions(vars: { id: string }) {
     if (!inspection) return { inspection: null };
 
     const inspectionTypeId = inspection.inspectionType.id;
-
-    const { headers } = await getHeaders({
-        inspectionType: inspectionTypeId,
-        first: 500,
-    });
     const { polls } = await getPolls({ inspection: vars.id });
+
+    // Si la inspección ya tiene una encuesta creada, sus preguntas son las que
+    // se guardaron en su momento (pueden estar "congeladas" tras una revisión
+    // del modelo). Reconstruimos los encabezados a partir de esas preguntas
+    // para que el histórico se muestre exactamente como se respondió.
+    // Solo cuando NO hay encuesta usamos la plantilla activa del catálogo
+    // (Rev02), que es la que se usará al crear la nueva encuesta.
+    const existingPoll = polls.edges[0]?.node;
+    const pollQuestionEdges = existingPoll?.question?.edges ?? [];
+
+    let headers;
+    if (existingPoll && pollQuestionEdges.length > 0) {
+        headers = buildHeadersFromPollQuestions(
+            pollQuestionEdges,
+            inspection.inspectionType,
+        );
+    } else {
+        ({ headers } = await getHeaders({
+            inspectionType: inspectionTypeId,
+            first: 500,
+        }));
+    }
 
     return {
         inspection: {
@@ -72,6 +89,61 @@ export async function GetInspectionWithQuestions(vars: { id: string }) {
             headers,
             polls,
         },
+    };
+}
+
+// Agrupa las preguntas de una encuesta por su encabezado, preservando el orden
+// (ya vienen ordenadas por sort_order desde el data layer de polls) y usando la
+// misma forma que devuelve getHeaders, de modo que el cliente no distinga la
+// procedencia.
+function buildHeadersFromPollQuestions(
+    edges: Array<{
+        node: {
+            id: string;
+            questionText: string;
+            header: { id: string; headerText: string };
+        };
+    }>,
+    inspectionType: { id: string; name: string },
+) {
+    const order: string[] = [];
+    const byHeader = new Map<
+        string,
+        { id: string; headerText: string; questions: UnifiedQuestion[] }
+    >();
+
+    for (const { node } of edges) {
+        const headerId = node.header?.id ?? "";
+        const headerText = node.header?.headerText ?? "";
+        let slot = byHeader.get(headerId);
+        if (!slot) {
+            slot = { id: headerId, headerText, questions: [] };
+            byHeader.set(headerId, slot);
+            order.push(headerId);
+        }
+        slot.questions.push({
+            id: node.id,
+            questionText: node.questionText,
+            header: { id: headerId, headerText },
+            createdAt: "",
+            updatedAt: "",
+        });
+    }
+
+    return {
+        edges: order.map((headerId) => {
+            const slot = byHeader.get(headerId)!;
+            return {
+                node: {
+                    id: slot.id,
+                    headerText: slot.headerText,
+                    createdAt: "",
+                    updatedAt: "",
+                    inspectionType,
+                    questions: slot.questions,
+                },
+            };
+        }),
     };
 }
 
